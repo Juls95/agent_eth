@@ -7,7 +7,11 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
 
-dotenv.config();
+dotenv.config({ path: '/Users/julian/Documents/agente_kit_Test/agent-kit/.env' });
+
+if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is not set in .env file");
+}
 
 /**
  * Initialize the agent with Warden Agent Kit
@@ -30,9 +34,8 @@ async function initializeAgent() {
 
         // Initialize Warden Agent Kit
         const agentkit = new WardenAgentKit(config);
-
         // Initialize Warden Agent Kit Toolkit and get tools
-        const wardenToolkit = new WardenToolkit(agentkit);
+        const wardenToolkit = new WardenToolkit(agentkit as any);
         const tools = wardenToolkit.getTools();
 
         // Store buffered conversation history in memory
