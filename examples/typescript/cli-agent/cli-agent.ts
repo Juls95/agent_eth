@@ -6,6 +6,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatAnthropic } from "@langchain/anthropic";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
+import { UniswapTool } from "./src/tools/uniswapTool";
 
 dotenv.config({ path: '/Users/julian/Documents/agente_kit_Test/agent-kit/.env' });
 
@@ -35,8 +36,11 @@ async function initializeAgent() {
         // Initialize Warden Agent Kit
         const agentkit = new WardenAgentKit(config);
         // Initialize Warden Agent Kit Toolkit and get tools
+        const uniswapTool = new UniswapTool();
         const wardenToolkit = new WardenToolkit(agentkit as any);
-        const tools = wardenToolkit.getTools();
+        const tools = [...wardenToolkit.getTools(), uniswapTool];
+
+        console.log("Available tools:", tools.map(t => t.name));
 
         // Store buffered conversation history in memory
         const memory = new MemorySaver();
@@ -50,9 +54,12 @@ async function initializeAgent() {
             tools,
             checkpointSaver: memory,
             messageModifier:
-                "You're a helpful assistant that can help with a variety of tasks related to web3 tranactions." +
-                "You should only use the provided tools to carry out tasks, interperate the users input" +
-                "and select the correct tool to use for the required tasks or tasks.",
+                "You're a helpful assistant specialized in Uniswap data analysis. " +
+                "When users ask about Uniswap pools, ALWAYS use the get_uniswap_metrics tool with the exact pool address. " +
+                "For example, if someone asks about the ETH/USDC pool at 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8, " +
+                "use get_uniswap_metrics with '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8' as input. " +
+                "After getting the data, explain what the metrics mean in a clear way. " +
+                "If there's an error, suggest checking if the pool address is correct and valid.",
         });
 
         return { agent, config: agentConfig };

@@ -12,5 +12,10 @@
     "turbo": "^2.3.3",
     "typedoc": "^0.27.2",
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "^5.0.4",
+    "ethers": "^6.13.5",
+    "graphql-request": "^7.1.2"
   }
 }
