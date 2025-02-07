@@ -124,3 +124,4 @@ pids
 .DS_Store
 **/*_local*
 api.json
+.vercel

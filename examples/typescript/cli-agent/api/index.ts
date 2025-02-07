@@ -2,37 +2,33 @@ import express from 'express';
 import cors from 'cors';
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage } from "@langchain/core/messages";
-import { UniswapTool } from '../tools/uniswapTool';
+import { UniswapTool } from '../src/tools/uniswapTool';
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 import { WardenAgentKit } from "@wardenprotocol/warden-agent-kit-core";
 import { WardenToolkit } from "@wardenprotocol/warden-langchain";
 import * as dotenv from 'dotenv';
 
-// Load environment variables first
-dotenv.config({ path: '../../../.env' });
-
-// Validate required environment variables
-const requiredEnvVars = ['ANTHROPIC_API_KEY', 'GRAPH_API_KEY'];
-for (const envVar of requiredEnvVars) {
-    if (!process.env[envVar]) {
-        console.error(`Error: ${envVar} is not set in environment variables`);
-        process.exit(1);
-    }
-}
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
-// Update CORS configuration
-app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:5173', 'http://localhost:4173'],
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
+// CORS setup as per Vercel docs
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://agentaiblockchainadifi-juls95-juls95s-projects.vercel.app"
+    ],
+  })
+);
 
 app.use(express.json());
 
-// Initialize agent once for reuse
+// Initialize agent
 let agent: any = null;
 let isInitializing = false;
 
@@ -41,10 +37,6 @@ async function initializeAgent() {
     isInitializing = true;
     
     try {
-        if (!process.env.ANTHROPIC_API_KEY) {
-            throw new Error('ANTHROPIC_API_KEY is not set in environment variables');
-        }
-
         const llm = new ChatAnthropic({
             modelName: "claude-3-sonnet-20240229",
             anthropicApiKey: process.env.ANTHROPIC_API_KEY,
@@ -81,25 +73,21 @@ async function initializeAgent() {
     }
 }
 
-// Initialize agent when server starts
-initializeAgent().catch(error => {
-    console.error('Fatal error during agent initialization:', error);
-    process.exit(1);
-});
-
+// Health check endpoint
 app.get('/', (req, res) => {
-    res.json({ 
-        status: 'Server is running',
-        agentStatus: agent ? 'Agent initialized' : isInitializing ? 'Agent initializing...' : 'Agent not initialized',
-        initialized: !!agent
-    });
+    res.json({ status: 'API is running' });
 });
 
-app.post('/api/chat', async (req, res) => {
+// Chat endpoint
+app.post('/chat', async (req, res) => {
     try {
         const { message } = req.body;
         if (!message) {
             return res.status(400).json({ error: 'Message is required' });
+        }
+
+        if (!agent) {
+            await initializeAgent();
         }
 
         if (!agent) {
@@ -122,6 +110,7 @@ app.post('/api/chat', async (req, res) => {
 
         res.json({ response });
     } catch (error: unknown) {
+        console.error('Chat error:', error);
         if (error instanceof Error) {
             res.status(500).json({ error: error.message });
         } else {
@@ -130,7 +119,13 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-}); 
+// Only start the server if we're running locally
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log('Environment:', process.env.NODE_ENV || 'development');
+    });
+}
+
+export default app; 

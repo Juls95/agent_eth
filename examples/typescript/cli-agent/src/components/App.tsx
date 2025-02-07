@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 const App: React.FC = () => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
@@ -13,13 +15,17 @@ const App: React.FC = () => {
         setMessages(prev => [...prev, `You: ${input}`]);
 
         try {
-            const response = await fetch('http://localhost:3001/api/chat', {
+            const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ message: input }),
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
             if (data.error) {
@@ -28,6 +34,7 @@ const App: React.FC = () => {
 
             setMessages(prev => [...prev, `Assistant: ${data.response}`]);
         } catch (error) {
+            console.error('Fetch error:', error);
             setMessages(prev => [...prev, `Error: ${error.message}`]);
         } finally {
             setLoading(false);
