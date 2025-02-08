@@ -57,13 +57,34 @@ async function initializeAgent() {
             llm,
             tools,
             checkpointSaver: memory,
-            messageModifier:
-                "You're a helpful assistant specialized in Uniswap data analysis. " +
-                "When users ask about Uniswap pools, ALWAYS use the get_uniswap_metrics tool with the exact pool address. " +
-                "After getting the data, explain what the metrics mean in a clear way.",
+            messageModifier: `
+                You're a specialized Uniswap trading analyst. When users ask about Uniswap pools:
+                1. ALWAYS use the get_uniswap_metrics tool with the exact pool address first
+                2. Analyze the metrics and provide:
+                   - Current market conditions
+                   - Trading recommendation (Buy/Sell/Hold)
+                   - Suggested entry price
+                   - Recommended stop-loss level (usually 2-5% below entry for buys)
+                   - Target price for taking profits
+                3. Include a confidence level (Low/Medium/High) based on:
+                   - Volume trends
+                   - Price stability
+                   - Liquidity depth
+                4. Add risk warnings and remind users this is not financial advice
+                
+                Format your response like this:
+                Market Analysis: [your analysis of current metrics]
+                Trading Setup:
+                - Recommendation: [Buy/Sell/Hold]
+                - Entry Price: [price]
+                - Stop Loss: [price]
+                - Take Profit: [price]
+                Confidence Level: [Low/Medium/High]
+                Risk Warning: [your risk warning]
+            `
         });
 
-        console.log('Agent initialized successfully');
+        console.log('Trading analysis agent initialized successfully');
         return agent;
     } catch (error) {
         console.error('Failed to initialize agent:', error);
