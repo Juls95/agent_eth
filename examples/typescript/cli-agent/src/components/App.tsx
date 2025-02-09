@@ -69,7 +69,7 @@ const App: React.FC = () => {
                         {messages.length === 0 && (
                             <div className="feature-card">
                                 <h3>Example Query</h3>
-                                <p>Try asking: "Analyze the trading setup for the ETH/USDC pool at 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8. Should I enter a position now?"</p>
+                                <p>Try asking: "Analyze the ETH/USDC pool at 0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8?"</p>
                             </div>
                         )}
                         {messages.map((msg, index) => (
